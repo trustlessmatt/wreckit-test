@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Wreckit local config (may contain secrets)
+.wreckit/config.local.json
