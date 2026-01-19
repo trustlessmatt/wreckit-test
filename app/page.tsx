@@ -8,11 +8,11 @@ import { AddSetModal } from '@/components/AddSetModal';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCollectionStore } from '@/store/useCollectionStore';
-import { PokemonSet, UserCard } from '@/db/schema';
+import { PokemonSet } from '@/db/schema';
 
 export default function Home() {
   const { authenticated, getAccessToken } = usePrivy();
-  const { user, isAuthenticated, setAuth, logout } = useAuthStore();
+  const { isAuthenticated, setAuth, logout } = useAuthStore();
   const {
     sets,
     cards,

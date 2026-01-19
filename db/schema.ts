@@ -31,9 +31,20 @@ export const userCards = pgTable('user_cards', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export type User = typeof users.$inferSelect;
+export type User = Omit<typeof users.$inferSelect, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
 export type NewUser = typeof users.$inferInsert;
-export type PokemonSet = typeof pokemonSets.$inferSelect;
+
+export type PokemonSet = Omit<typeof pokemonSets.$inferSelect, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
 export type NewPokemonSet = typeof pokemonSets.$inferInsert;
-export type UserCard = typeof userCards.$inferSelect;
+
+export type UserCard = Omit<typeof userCards.$inferSelect, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
 export type NewUserCard = typeof userCards.$inferInsert;

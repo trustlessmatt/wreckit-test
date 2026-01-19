@@ -3,12 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PokemonSet as PokemonTCGSet } from '@/lib/pokemon-tcg';
-import { gsap } from 'gsap';
+import { PokemonSet as DBPokemonSet } from '@/db/schema';
 
 interface AddSetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddSet: (set: PokemonTCGSet) => void;
+  onAddSet: (set: DBPokemonSet) => void;
 }
 
 export function AddSetModal({ isOpen, onClose, onAddSet }: AddSetModalProps) {

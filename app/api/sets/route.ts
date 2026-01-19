@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { users, pokemonSets, userCards } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { privy } from '@/lib/privy';
+import { pokemonTCGApi } from '@/lib/pokemon-tcg';
 
 // GET user's Pokemon sets
 export async function GET(req: NextRequest) {
@@ -31,7 +32,13 @@ export async function GET(req: NextRequest) {
       where: eq(pokemonSets.userId, userResult.id),
     });
 
-    return NextResponse.json({ sets });
+    const serializedSets = sets.map(set => ({
+      ...set,
+      createdAt: set.createdAt.toISOString(),
+      updatedAt: set.updatedAt.toISOString(),
+    }));
+
+    return NextResponse.json({ sets: serializedSets });
   } catch (error) {
     console.error('Get sets error:', error);
     return NextResponse.json({ error: 'Failed to fetch sets' }, { status: 500 });
@@ -91,7 +98,28 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({ set: newSet }, { status: 201 });
+    // Fetch cards from PokemonTCG.io and seed them
+    const apiCards = await pokemonTCGApi.getSetCards(setApiId);
+
+    // Create user_cards entries for each card
+    const seededCards = await db
+      .insert(userCards)
+      .values(
+        apiCards.map((card) => ({
+          userId: userResult.id,
+          setApiId,
+          cardApiId: card.id,
+          cardName: card.name,
+          cardNumber: card.number,
+          collected: false,
+        }))
+      )
+      .returning();
+
+    return NextResponse.json(
+      { set: newSet, cards: seededCards },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Create set error:', error);
     return NextResponse.json({ error: 'Failed to create set' }, { status: 500 });

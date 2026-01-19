@@ -19,7 +19,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           logo: 'https://your-logo-url.com/logo.png',
         },
         embeddedWallets: {
-          createOnLogin: 'users-without-wallets',
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
         },
       }}
     >

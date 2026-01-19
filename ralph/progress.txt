@@ -1,0 +1,40 @@
+# Ralph Progress Tracker
+
+## Project: Database Schema Refactoring
+## Branch: ralph/database-schema-refactoring
+
+### Stories Completed: 0/15
+
+---
+
+### Story Status
+
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| US-001 | Create global sets table | 1 | Pending |
+| US-002 | Create global cards table | 2 | Pending |
+| US-003 | Create user collection table | 3 | Pending |
+| US-004 | Create seed script structure | 4 | Pending |
+| US-005 | Implement set fetching in seed script | 5 | Pending |
+| US-006 | Implement card fetching with pagination | 6 | Pending |
+| US-007 | Add idempotency to seed script | 7 | Pending |
+| US-008 | Run seed script and verify data | 8 | Pending |
+| US-009 | Drop old user-specific tables | 9 | Pending |
+| US-010 | Update GET /api/sets route | 10 | Pending |
+| US-011 | Update POST /api/sets route | 11 | Pending |
+| US-012 | Update GET /api/cards route | 12 | Pending |
+| US-013 | Update PATCH /api/cards route | 13 | Pending |
+| US-014 | Update DELETE /api/sets route | 14 | Pending |
+| US-015 | Create GET /api/cards/:cardId route | 15 | Pending |
+
+---
+
+### Latest Work
+
+_No work started yet_
+
+---
+
+### Notes
+
+_Project initialized_

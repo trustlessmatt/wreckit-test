@@ -1,0 +1,253 @@
+{
+  "project": "wreckit-test",
+  "branchName": "ralph/database-schema-refactoring",
+  "description": "Refactor database schema to globally store Pokemon sets and cards independently of user data, eliminating duplication and reducing PokemonTCG.io API calls",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create global sets table",
+      "description": "As a developer, I need a global sets table to store PokemonTCG.io set metadata so it can be shared across all users.",
+      "acceptanceCriteria": [
+        "Create sets table with columns: id (uuid, pk), setApiId (text, unique), name, series, totalCards (integer), printedTotal (integer), ptcgoCode, releaseDate, legalities (jsonb), images (jsonb: symbol, logo), createdAt, updatedAt",
+        "Add unique index on setApiId for fast lookups",
+        "Generate and run Drizzle migration successfully",
+        "Type Set exported from schema.ts matches sets.$inferSelect",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create global cards table",
+      "description": "As a developer, I need a global cards table to store PokemonTCG.io card metadata linked to sets, so all users reference the same card data.",
+      "acceptanceCriteria": [
+        "Create cards table with columns: id (uuid, pk), cardApiId (text, unique), setId (uuid, foreign key → sets.id), name, number, supertype, subtypes (text array), types (text array), hp, rarity, images (jsonb: small, large), artist, legalities (jsonb), tcgplayer (jsonb), cardmarket (jsonb), createdAt, updatedAt",
+        "Add unique index on cardApiId for fast lookups",
+        "Add foreign key constraint from cards.setId to sets.id with cascade delete",
+        "Add composite index on (setId, number) for ordered card queries",
+        "Generate and run Drizzle migration successfully",
+        "Type Card exported from schema.ts matches cards.$inferSelect",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Create user collection table",
+      "description": "As a developer, I need a user collection table to link users to cards they've collected, replacing the current user-specific cards table.",
+      "acceptanceCriteria": [
+        "Create user_collection table with columns: id (uuid, pk), userId (uuid, foreign key → users.id), cardId (uuid, foreign key → cards.id), collected (boolean, default true), createdAt, updatedAt",
+        "Add unique constraint on (userId, cardId) to prevent duplicate collection entries",
+        "Add foreign key constraint from user_collection.cardId to cards.id",
+        "Add foreign key constraint from user_collection.userId to users.id with cascade delete",
+        "Add index on userId for fast user collection queries",
+        "Generate and run Drizzle migration successfully",
+        "Type UserCollection exported from schema.ts matches user_collection.$inferSelect",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Create seed script structure",
+      "description": "As a developer, I need the basic seed script file structure and npm script command to begin fetching PokemonTCG.io data.",
+      "acceptanceCriteria": [
+        "Create scripts/seed-sets-and-cards.ts file",
+        "Add seed:cards script to package.json that runs tsx scripts/seed-sets-and-cards.ts",
+        "Script connects to database successfully",
+        "Script has basic error handling and logging",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Implement set fetching in seed script",
+      "description": "As a developer, I need the seed script to fetch all Pokemon sets from PokemonTCG.io API and insert them into the sets table.",
+      "acceptanceCriteria": [
+        "Script fetches all sets from PokemonTCG.io API released on or after 2022-01-01",
+        "For each set, insert into sets table with all metadata (setApiId, name, series, totalCards, printedTotal, ptcgoCode, releaseDate, legalities, images)",
+        "Script implements rate limiting with 1 second delay between requests",
+        "Script logs progress: sets processed, errors encountered",
+        "Script handles API errors gracefully and continues",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Implement card fetching with pagination",
+      "description": "As a developer, I need the seed script to fetch all cards for each set using pagination and insert them into the cards table.",
+      "acceptanceCriteria": [
+        "For each set, fetch all cards using PokemonTCG.io API with pageSize=250",
+        "Handle multiple pages of results using pagination",
+        "For each card, insert into cards table linked to parent set via setId",
+        "Include all card metadata: cardApiId, name, number, supertype, subtypes, types, hp, rarity, images, artist, legalities, tcgplayer, cardmarket",
+        "Implement 1 second delay between API requests for rate limiting",
+        "Script logs progress: cards processed per set, errors encountered",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Add idempotency to seed script",
+      "description": "As a developer, I need the seed script to be idempotent so it can be run multiple times without creating duplicates.",
+      "acceptanceCriteria": [
+        "Script checks if set with setApiId already exists before inserting (upsert logic)",
+        "Script checks if card with cardApiId already exists before inserting (upsert logic)",
+        "Script uses ON CONFLICT DO NOTHING or equivalent Drizzle upsert",
+        "Script logs final counts: total sets, total cards, new sets added, new cards added",
+        "Script completes successfully when run multiple times",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Run seed script and verify data",
+      "description": "As a developer, I need to run the seed script and verify that all modern sets and cards are populated in the database.",
+      "acceptanceCriteria": [
+        "Run npm run seed:cards successfully",
+        "Verify sets table has rows (query: SELECT COUNT(*) FROM sets)",
+        "Verify cards table has rows (query: SELECT COUNT(*) FROM cards)",
+        "Sample query confirms cards are linked to correct sets via setId",
+        "All sets from 2022+ are present (at least 50 sets expected)",
+        "All cards for those sets are present (at least 5000 cards expected)",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Drop old user-specific tables",
+      "description": "As a developer, I need to remove the old pokemon_sets and user_cards tables after verifying the new schema works.",
+      "acceptanceCriteria": [
+        "Create migration that drops pokemon_sets table",
+        "Create migration that drops user_cards table",
+        "Remove PokemonSet and UserCard types from schema.ts",
+        "Update TypeScript exports to only include new schema types (Set, Card, UserCollection)",
+        "All typecheck errors related to old types are resolved",
+        "Migration runs successfully",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Update GET /api/sets route",
+      "description": "As a client application, I need to fetch available Pokemon sets from the global sets table to display them to users for selection.",
+      "acceptanceCriteria": [
+        "GET /api/sets returns all sets from global sets table (no auth required)",
+        "Response includes: id, setApiId, name, series, totalCards, images (symbol, logo)",
+        "Supports optional query param ?q=name to filter sets by name (case-insensitive)",
+        "Returns 500 error if database query fails",
+        "Response format: { sets: Set[] }",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Update POST /api/sets route",
+      "description": "As an authenticated user, I need to add a set to my collection, which should create user_collection entries for all cards in that set.",
+      "acceptanceCriteria": [
+        "POST /api/sets requires valid Bearer token authentication",
+        "Request body: { setApiId: string }",
+        "Validates set exists in global sets table via setApiId, returns 404 if not found",
+        "Fetches all cards for the set from global cards table via setId",
+        "Creates user_collection entries for all cards in set with collected: false",
+        "Checks for existing entries to avoid duplicates (unique constraint handles this)",
+        "Returns 201 with { set: Set, cardsAdded: number }",
+        "Returns 401 if token invalid, 404 if set not found, 500 if database operation fails",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Update GET /api/cards route",
+      "description": "As an authenticated user, I need to fetch my collected cards for a specific set with their collection status.",
+      "acceptanceCriteria": [
+        "GET /api/cards?setApiId=xxx requires valid Bearer token authentication",
+        "Joins cards table with user_collection table on cardId",
+        "Returns all cards for the set with collected boolean from user_collection (null if not in collection)",
+        "Response format: { cards: (Card & { collected: boolean | null })[] }",
+        "Returns 401 if token invalid, 500 if database query fails",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Update PATCH /api/cards route",
+      "description": "As an authenticated user, I need to toggle the collected status of a card in my collection.",
+      "acceptanceCriteria": [
+        "PATCH /api/cards requires valid Bearer token authentication",
+        "Request body: { cardId: uuid, collected: boolean }",
+        "Validates card exists in global cards table via cardId, returns 404 if not found",
+        "Upserts into user_collection table (inserts if missing, updates if exists) on (userId, cardId)",
+        "Returns 200 with updated card collection entry",
+        "Returns 401 if token invalid, 404 if card not found, 500 if database operation fails",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Update DELETE /api/sets route",
+      "description": "As an authenticated user, I need to remove a set from my collection, which should delete all user_collection entries for that set.",
+      "acceptanceCriteria": [
+        "DELETE /api/sets?setId=xxx requires valid Bearer token authentication",
+        "Deletes all user_collection entries where cardId is in the specified set (join cards to get setId)",
+        "Validates user owns the collection entries being deleted (userId matches)",
+        "Returns 200 with { success: true, cardsRemoved: number }",
+        "Returns 401 if token invalid, 500 if database operation fails",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Create GET /api/cards/:cardId route",
+      "description": "As a client application, I need to fetch detailed card metadata from the global cards table to display card information.",
+      "acceptanceCriteria": [
+        "GET /api/cards/:cardId returns full card details from global cards table (no auth required)",
+        "Response includes all card metadata: name, number, images, types, hp, rarity, supertype, subtypes, artist, legalities, tcgplayer, cardmarket",
+        "Returns 404 if card not found, 500 if database query fails",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
